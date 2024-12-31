@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 
 const createUser = async (req, res) => {
   const { name, email, password } = req.body;
+
   if (!name || !email || !password) {
     return res.status(400).send({ message: "All fields are required" });
   }
@@ -22,8 +23,8 @@ const createUser = async (req, res) => {
   // });
 
   const newUser = new User({ name, email, password });
-
   await newUser.save();
+
   res.status(201).send({ message: "User created successfully", data: newUser });
 };
 
@@ -53,12 +54,12 @@ const updateUser = async (req, res) => {
   const { id } = req.params;
   console.log(id);
 
-  const existingUser = await User.findById(id);
+  const existingUser = await User.findById(id).select("+password");
 
-  console.log(existingUser);
+  console.log(existingUser, "testing");
 
   if (!existingUser) {
-    res.status(404).send({ message: "User not found" });
+    return res.status(404).send({ message: "User not found" });
   }
 
   const { name, email, password } = req.body;
@@ -67,21 +68,26 @@ const updateUser = async (req, res) => {
   //   return res.status(400).send({ message: "All fields are required" });
   // }
 
-  const updateUser = await User.findByIdAndUpdate(
-    id,
-    {
-      name,
-      email,
-      password,
-    },
-    {
-      new: true,
-    }
-  );
+  // const updateUser = await User.findByIdAndUpdate(
+  //   id,
+  //   {
+  //     name,
+  //     email,
+  //     password,
+  //   },
+  //   {
+  //     new: true,
+  //   }
+  // );
 
+  existingUser.name = name;
+  existingUser.email = email;
+  existingUser.password = password;
+
+  await existingUser.save();
   res
     .status(200)
-    .send({ message: "User updated successfully", data: updateUser });
+    .send({ message: "User updated successfully", data: existingUser });
 };
 
 const deleteUser = async (req, res) => {

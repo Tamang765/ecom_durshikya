@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const port = 8000;
 const userRoute = require("./route/userRoute");
+const productRoute = require("./route/productRoute");
 
 app.use(express.json());
 
@@ -25,6 +26,9 @@ require("./utils/database");
 // });
 
 app.use("/user", userRoute);
+
+
+app.use("/product", productRoute);
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
