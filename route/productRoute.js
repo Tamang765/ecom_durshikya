@@ -3,10 +3,11 @@ const {
   createProduct,
   getProducts,
 } = require("../controller/productController");
+const upload = require("../utils/upload");
 const router = express.Router();
 
-router.post("/", createProduct);
+router.post("/", upload.single("image"), createProduct);
 router.get("/", getProducts);
-router.put("/", createProduct);
+// router.put("/", createProduct);
 
 module.exports = router;
