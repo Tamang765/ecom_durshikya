@@ -1,5 +1,6 @@
 const User = require("../model/userModel");
 const bcrypt = require("bcryptjs");
+const jsonwebtoken = require("jsonwebtoken");
 
 const createUser = async (req, res) => {
   const { name, email, password } = req.body;
@@ -29,6 +30,8 @@ const createUser = async (req, res) => {
 };
 
 const getUser = async (req, res) => {
+  console.log(req.user, ";this is user");
+  console.log(req.user);
   const users = await User.find({});
   res.status(200).send({ data: users });
 };
@@ -90,25 +93,50 @@ const updateUser = async (req, res) => {
     .send({ message: "User updated successfully", data: existingUser });
 };
 
-const deleteUser = async (req, res) => {
-  const { id } = req.params;
+const logIn = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).send({ message: "All fields are required" });
+    }
+    const userExist = await User.findOne({ email }).select("+password");
 
-  const existingUser = await User.findById(id);
+    if (!userExist) {
+      return res.status(400).send({ message: "Something went wrong" });
+    }
 
-  console.log(existingUser);
+    const passwordmatch = await bcrypt.compare(password, userExist.password);
 
-  if (!existingUser) {
-    return res.status(404).send({ message: "Something went wrong" });
+    if (!passwordmatch) {
+      return res.status(400).send({ message: "Invalid password" });
+    }
+
+    const token = await jsonwebtoken.sign(
+      { id: userExist?._id },
+      process.env.SECRET_KEY,
+      {
+        expiresIn: "1hr",
+      }
+    );
+
+    res.status(200).send({
+      message: "Login successful",
+      data: {
+        name: userExist.name,
+        email: userExist.email,
+        _id: userExist._id,
+      },
+      token,
+    });
+  } catch (error) {
+    console.log(error.message);
   }
-
-  await User.findByIdAndDelete(id);
-  res.status(200).send({ message: "User deleted successfully" });
 };
 
 module.exports = {
   createUser,
   getUser,
   updateUser,
-  deleteUser,
   getSingleUser,
+  logIn,
 };

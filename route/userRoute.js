@@ -3,17 +3,17 @@ const {
   createUser,
   getUser,
   updateUser,
-  deleteUser,
   getSingleUser,
+  logIn,
 } = require("../controller/userController");
+const checkAuth = require("../middleware/checkAuth");
+
 const router = express.Router();
 
 router.post("/", createUser);
-
-router.get("/", getUser);
+router.get("/", checkAuth, getUser);
 router.patch("/:id", updateUser);
 router.get("/:id", getSingleUser);
-
-router.delete("/:id", deleteUser);
+router.post("/login", logIn);
 
 module.exports = router;

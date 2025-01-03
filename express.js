@@ -27,7 +27,6 @@ require("./utils/database");
 
 app.use("/user", userRoute);
 
-
 app.use("/product", productRoute);
 
 app.listen(port, () => {
