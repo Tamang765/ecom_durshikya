@@ -5,6 +5,10 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  slug: {
+    type: String,
+    required: true,
+  },
   category: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "category",
@@ -22,11 +26,12 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  images: {
-    type: Object,
-    default: [],
-    required: true,
-  },
+  images: [
+    {
+      type: Object,
+      required: true,
+    },
+  ],
   quantity: {
     type: Number,
     default: 0,

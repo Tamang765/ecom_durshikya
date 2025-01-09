@@ -1,6 +1,9 @@
 const express = require("express");
 const userRoute = require("./route/userRoute");
-const port = 8000;
+const categoryRoute = require("./route/categoryRoute");
+const productRoute = require("./route/productRoute");
+
+const port = 9000;
 
 const app = express();
 
@@ -12,12 +15,15 @@ require("dotenv").config();
 //database connection
 require("./utils/database");
 
-app.use("/", (req, res) => {
+//routes
+
+app.use("/v1/api/user", userRoute);
+app.use("/v1/api/category", categoryRoute);
+app.use("/v1/api/product", productRoute);
+
+app.get("/", (req, res) => {
   res.send("hello");
 });
-
-//routes
-app.use("/v1/api/user", userRoute);
 
 app.listen(port, () => {
   console.log(`server is running on port ${port}`);
