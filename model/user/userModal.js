@@ -26,6 +26,9 @@ const userSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    role: {
+      enum: ["user", "admin"],
+    },
   },
   { timeStamps: true }
 );

@@ -2,6 +2,7 @@ const express = require("express");
 const userRoute = require("./route/userRoute");
 const categoryRoute = require("./route/categoryRoute");
 const productRoute = require("./route/productRoute");
+const orderRoute = require("./route/orderItemRoute");
 
 const port = 9000;
 
@@ -20,6 +21,7 @@ require("./utils/database");
 app.use("/v1/api/user", userRoute);
 app.use("/v1/api/category", categoryRoute);
 app.use("/v1/api/product", productRoute);
+app.use("/v1/api/order-item", orderRoute);
 
 app.get("/", (req, res) => {
   res.send("hello");

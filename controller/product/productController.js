@@ -1,11 +1,11 @@
 const Product = require("../../model/product/productModel");
 const cloudinary = require("../../utils/cloudinary");
-
+const slugify = require("slugify");
 const createProduct = async (req, res) => {
   try {
     const {
       name,
-      slug,
+      // slug,
       category,
       price,
       discount,
@@ -16,7 +16,7 @@ const createProduct = async (req, res) => {
     } = req.body;
     if (
       !name ||
-      !slug ||
+      // !slug ||
       !category ||
       !price ||
       !discount ||
@@ -32,7 +32,11 @@ const createProduct = async (req, res) => {
       return res.status(400).send({ message: "All fields required" });
     }
 
-    console.log(req.body);
+    const slug = slugify(name, {
+      lower: true,
+      strict: true,
+    });
+    
     const parsedColors = JSON.parse(color);
     const parsedSizes = JSON.parse(size);
 
@@ -93,9 +97,12 @@ const updateProduct = async (req, res) => {
     } = req.body;
 
     const isExist = await Product.findById({ _id: id });
+
     if (!isExist) {
       return res.status(400).send({ message: "Product not found" });
     }
+
+    console.log(req.files, "this is files");
 
     let imageFiles = [];
     if (req.files.length) {
@@ -113,8 +120,14 @@ const updateProduct = async (req, res) => {
         imageFiles.push(neededData);
       }
     }
-    const parsedColors = JSON.parse(color);
-    const parsedSizes = JSON.parse(size);
+    let parsedColors;
+    let parsedSizes;
+    if (color) {
+      parsedColors = JSON.parse(color);
+    }
+    if (size) {
+      parsedSizes = JSON.parse(size);
+    }
 
     const product = await Product.findByIdAndUpdate(
       id,
@@ -158,14 +171,6 @@ const getProducts = async (req, res) => {
       filter.size = size;
     }
 
-    // if (minPrice) {
-    //   filter.price = { minPrice: { $gte: Number(minPrice) } };
-    //   // filter.price = { ...filter.price, price: { $gte: Number(minPrice) } };
-    // }
-    // if (maxPrice) {
-    //   filter.price = { ...filter.price, maxPrice: { $lte: Number(maxPrice) } };
-    // }
-
     console.log(filter, "this is filter");
 
     console.log(category_id, color, "this is color");
@@ -178,10 +183,10 @@ const getProducts = async (req, res) => {
     //     }),
     //   });
 
-    //   const products = await Product.find(filter);
-    //   console.log(products);
-    //   return res.status(200).send({ data: products });
     // }
+    // const products = await Product.find(filter);
+    // console.log(products);
+    // return res.status(200).send({ data: products });
     const products = await Product.find({
       ...(category_id && { category: category_id }),
       ...(color && { color: color }),
@@ -222,6 +227,20 @@ const getSingleProduct = async (req, res) => {
     console.log(error.message);
   }
 };
+
+const getProductBySlug = async (req, res) => {
+  try {
+    const { slug } = req.params;
+
+    const productExist = await Product.findOne({ slug: slug });
+
+    if (!productExist) {
+      return res.status(400).send({ message: " Product not found" });
+    }
+    res.status(200).send({ data: productExist });
+  } catch (error) {}
+};
+
 const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -240,4 +259,5 @@ module.exports = {
   getProducts,
   getSingleProduct,
   deleteProduct,
+  getProductBySlug,
 };
