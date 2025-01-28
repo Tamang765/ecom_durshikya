@@ -11,12 +11,12 @@ const getOrder = async (req, res) => {
 
 const createOrder = async (req, res) => {
   try {
-    const { order, user, address, totalPrice, paymentMethod, status } =
+    const { order,  address, totalPrice, paymentMethod, status } =
       req.body;
-
+const user = req.user;
     if (
       !order ||
-      !user ||
+
       !address ||
       !totalPrice ||
       !paymentMethod ||
@@ -35,7 +35,7 @@ const createOrder = async (req, res) => {
     });
     const savedOrder = await newOrder.save();
 
-    req
+    res
       .status(201)
       .send({ message: "Order created successfully", data: savedOrder });
   } catch (error) {
@@ -57,8 +57,34 @@ const deleteOrder = async (req, res) => {
   }
 };
 
+const updateOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const orderExist = await Order.findById({ _id: id });
+    if (!orderExist) {
+      return res.status(400).send({ message: "Order does not exist" });
+    }
+    const updatedOrder = await Order.findByIdAndUpdate(
+      id,
+      {
+        status,
+      },
+      {
+        new: true,
+      }
+    );
+    res
+      .status(200)
+      .send({ message: "Order updated successfully", data: updatedOrder });
+  } catch (error) {
+    console.log(error.message);
+  }
+};
+
 module.exports = {
   createOrder,
   deleteOrder,
   getOrder,
+  updateOrder,
 };

@@ -14,6 +14,8 @@ const createProduct = async (req, res) => {
       size,
       color,
     } = req.body;
+
+    console.log(req.body);
     if (
       !name ||
       // !slug ||
@@ -36,7 +38,7 @@ const createProduct = async (req, res) => {
       lower: true,
       strict: true,
     });
-    
+
     const parsedColors = JSON.parse(color);
     const parsedSizes = JSON.parse(size);
 
@@ -80,6 +82,7 @@ const createProduct = async (req, res) => {
     console.log(error.message);
   }
 };
+
 
 const updateProduct = async (req, res) => {
   try {
@@ -158,9 +161,13 @@ const updateProduct = async (req, res) => {
 
 const getProducts = async (req, res) => {
   try {
-    const { category_id, color, size, minPrice, maxPrice } = req.query;
+
+
+    const { category_id, color, size, minPrice, maxPrice, name } = req.query;
 
     const filter = {};
+
+
     if (category_id) {
       filter.category = category_id;
     }
@@ -170,10 +177,6 @@ const getProducts = async (req, res) => {
     if (size) {
       filter.size = size;
     }
-
-    console.log(filter, "this is filter");
-
-    console.log(category_id, color, "this is color");
 
     // if (category_id || color) {
     //   const products = await Product.find({
@@ -185,13 +188,15 @@ const getProducts = async (req, res) => {
 
     // }
     // const products = await Product.find(filter);
-    // console.log(products);
+    console.log(typeof color);
     // return res.status(200).send({ data: products });
     const products = await Product.find({
+...(name && { name: { $regex: name, $options: "i" } }),
       ...(category_id && { category: category_id }),
-      ...(color && { color: color }),
+      ...(color && { color: {
+        $in:JSON.parse(color)
+      } }),
       ...(size && { size: size }),
-
       ...(minPrice && {
         price: { $gte: Number(minPrice) },
       }),
@@ -202,7 +207,7 @@ const getProducts = async (req, res) => {
         maxPrice && {
           price: { $gte: Number(minPrice), $lte: Number(maxPrice) },
         }),
-    });
+    }).populate("category");
 
     console.log(products, minPrice, maxPrice);
     res.status(200).send({ data: products });
@@ -213,6 +218,7 @@ const getProducts = async (req, res) => {
 
 const getSingleProduct = async (req, res) => {
   try {
+    console.log('hello id')
     const { id } = req.params;
 
     const productExist = await Product.findById({ _id: id });
@@ -228,8 +234,27 @@ const getSingleProduct = async (req, res) => {
   }
 };
 
+const deleteProductImage = async (req, res) => {
+  try {
+    const { productId, imageId } = req.params;
+    const productExist = await Product.findById({ _id: productId });
+    if (!productExist) {
+      return res.status(400).send({ message: "Product not found" });
+    }
+
+
+    const newImages = productExist.images.filter(
+      (image) => image.public_id !== imageId
+    );
+    productExist.images = newImages;
+    await productExist.save();
+    res.status(200).send({ message: "Image deleted successfully" });
+  } catch (error) {}
+};
+
 const getProductBySlug = async (req, res) => {
   try {
+    console.log('hello slug')
     const { slug } = req.params;
 
     const productExist = await Product.findOne({ slug: slug });
@@ -260,4 +285,5 @@ module.exports = {
   getSingleProduct,
   deleteProduct,
   getProductBySlug,
+  deleteProductImage,
 };

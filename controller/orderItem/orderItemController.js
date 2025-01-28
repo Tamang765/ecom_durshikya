@@ -6,8 +6,6 @@ const createOrderItem = async (req, res) => {
 
     const user = req.user;
 
-    console.log(req.body);
-
     if (!product || !color || !size || !quantity) {
       return res.status(400).send({ message: "All fields required" });
     }
@@ -19,10 +17,8 @@ const createOrderItem = async (req, res) => {
       user,
     });
 
-    console.log(productExist, "this is product exists");
-
     if (productExist) {
-      return res.status(400).send({ message: "Product already exist" });
+      return res.status(400).send({ message: "Product already exists" });
     }
 
     const orderItem = await OrderItem.create({
@@ -33,13 +29,18 @@ const createOrderItem = async (req, res) => {
       user,
     });
 
+    // Populate the product details in the orderItem
+    const populatedOrderItem = await orderItem.populate("product");
+
     res
       .status(200)
-      .send({ message: "Order item created successfully", data: orderItem });
+      .send({ message: "Order item created successfully", data: populatedOrderItem });
   } catch (error) {
     console.log(error.message);
+    res.status(500).send({ message: "Internal server error" });
   }
 };
+
 
 const editOrderItem = async (req, res) => {
   try {
@@ -76,7 +77,7 @@ const editOrderItem = async (req, res) => {
 const getUserOrderItem = async (req, res) => {
   try {
     const user = req.user;
-    const orderItem = await OrderItem.find({ user });
+    const orderItem = await OrderItem.find({ user }).populate("product");
     res.status(200).send({ data: orderItem });
   } catch (error) {
     console.log(error.message);

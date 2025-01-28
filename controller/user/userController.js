@@ -2,6 +2,7 @@ const User = require("../../model/user/userModal");
 const bcrypt = require("bcryptjs");
 
 const jsonwebtoken = require("jsonwebtoken");
+const { sendWelcomeEmail } = require("../../utils/mailer");
 
 const registerUser = async (req, res) => {
   try {
@@ -26,6 +27,7 @@ const registerUser = async (req, res) => {
       address,
     });
 
+    await sendWelcomeEmail(email, name);
     res.status(201).send({ message: "User registered successfully", user });
   } catch (error) {
     throw new Error(error);
@@ -34,6 +36,7 @@ const registerUser = async (req, res) => {
 
 const loginUser = async (req, res) => {
   try {
+    console.log(req.body, "this is bpody");
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -72,6 +75,15 @@ const loginUser = async (req, res) => {
   }
 };
 
+
+const getUsers = async (req, res) => {
+  try {
+    const users = await User.find();
+    res.status(200).send({ data: users });
+  } catch (error) {
+    console.log(error.message);
+  }
+};
 const getMe = async (req, res) => {
   try {
     const user = req.user;
@@ -109,5 +121,4 @@ const changePassword = async (req, res) => {
   }
 };
 
-
-module.exports = { registerUser, loginUser, getMe, changePassword };
+module.exports = { registerUser, loginUser, getMe, changePassword,getUsers };

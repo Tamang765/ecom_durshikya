@@ -26,6 +26,12 @@ const orderItemSchema = new mongoose.Schema(
   { timeStamps: true }
 );
 
+// Add a compound index to ensure uniqueness of product, color, size, and user
+orderItemSchema.index(
+  { product: 1, color: 1, size: 1, user: 1 },
+  { unique: true }
+);
+
 const OrderItem = mongoose.model("orderItem", orderItemSchema);
 
 module.exports = OrderItem;

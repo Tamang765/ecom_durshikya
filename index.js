@@ -1,14 +1,22 @@
 const express = require("express");
+const cors = require("cors");
 const userRoute = require("./route/userRoute");
 const categoryRoute = require("./route/categoryRoute");
 const productRoute = require("./route/productRoute");
 const orderRoute = require("./route/orderItemRoute");
+const ordersRoute = require("./route/orderRoute");
+
 const stripe = require("stripe")(
   "sk_test_51Qh9bq2N6bV3MNFWEa19HAwCKzfB3Oz70SWB3VD7ILZ1qwI4hMYFJRb4mUO5Hyc9np9F2IGj7kRXOTwrKynEVWJk00aMnAssKr"
 );
+
 const port = 9000;
 
 const app = express();
+
+
+
+app.use(cors());
 
 app.use(express.json());
 
@@ -26,54 +34,48 @@ app.use("/v1/api/user", userRoute);
 app.use("/v1/api/category", categoryRoute);
 app.use("/v1/api/product", productRoute);
 app.use("/v1/api/order-item", orderRoute);
+app.use("/v1/api/order", ordersRoute);
 
 //payment
 app.post("/create-checkout-session", async (req, res) => {
-  const orderitems = [
-    {
-      _id: "123",
-      price: 30000,
-      quantity: 1,
-      name: "Tshirt",
-    },
-    {
-      _id: "133",
-      price: 4000,
-      quantity: 2,
-      name: "pant",
-    },
-    {
-      _id: "143",
-      price: 40,
-      quantity: 3,
-      name: "shoes",
-    },
-  ];
+  try {
+    console.log(req.body, "this is body");
 
-  const line_items = orderitems.map((item) => {
-    return {
-      price_data: {
-        currency: "npr",
-        product_data: {
-          name: item.name,
+    // Map req.body to the required format for Stripe's API
+    const formated_data = req.body?.map((item) => {
+      return {
+        price_data: {
+          currency: "npr",
+          product_data: {
+            name: item?.product?.name, // Access product name
+          },
+          unit_amount: item?.product?.price * 100, // Access product price and multiply by 100 for Stripe
         },
-        unit_amount: item.price,
-      },
-      quantity: item.quantity,
-    };
-  });
+        quantity: item.quantity, // Get the quantity directly from the item
+      };
+    });
 
-  console.log(line_items, "asdasdasd");
+    console.log(formated_data, "formatted data");
 
-  const session = await stripe.checkout.sessions.create({
-    line_items: line_items,
-    mode: "payment",
-    success_url: `${process.env.FRONTEND_URL}?success=true`,
-    cancel_url: `${process.env.FRONTEND_URL}?canceled=true`,
-  });
+    // Create the Stripe checkout session
+    const session = await stripe.checkout.sessions.create({
+      line_items: formated_data,
+      mode: "payment",
+      success_url: `${process.env.FRONTEND_URL}?success=true`,
+      cancel_url: `${process.env.FRONTEND_URL}?canceled=true`,
+    });
 
-  res.redirect(303, session.url);
+    console.log(session.url,'session')
+
+    // Redirect to the session URL
+    // res.redirect(303, session.url);
+    res.status(200).send({ url: session.url });
+  } catch (error) {
+    console.error("Error creating checkout session:", error);
+    res.status(500).send({ error: "Failed to create checkout session" });
+  }
 });
+
 
 app.get("/", (req, res) => {
   res.send("hello");
